@@ -120,16 +120,20 @@ describe "Growl::Notifier.sharedInstance" do
   
   before do
     set_variables!
+    
+    @pid = 54231
+    OSX::NSProcessInfo.processInfo.stubs(:processIdentifier).returns(@pid)
+  end
+  
+  it "should return the applications PID" do
+    @instance.send(:pid).should.be @pid
   end
   
   it "should be able to easily add observers to the NSDistributedNotificationCenter" do
-    pid = 54231
-    @instance.stubs(:pid).returns(pid)
-    
     @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "name", nil)
     @instance.send(:add_observer, 'selector:', 'name', false)
     
-    @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "#{@name}-#{pid}-name", nil)
+    @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "#{@name}-#{@pid}-name", nil)
     @instance.send(:add_observer, 'selector:', 'name', true)
   end
 end

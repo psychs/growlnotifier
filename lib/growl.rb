@@ -81,6 +81,10 @@ module Growl
     
     private
     
+    def pid
+      OSX::NSProcessInfo.processInfo.processIdentifier.to_i
+    end
+    
     def notification_center
       OSX::NSDistributedNotificationCenter.defaultCenter
     end
