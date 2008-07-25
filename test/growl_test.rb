@@ -5,15 +5,43 @@ require "mocha"
 
 require File.expand_path('../../lib/growl', __FILE__)
 
-describe 'Growl::Notifier#start' do
-  before do
+module GrowlNotifierSpecHelper
+  def set_variables!
     @instance = Growl::Notifier.sharedInstance
-    
     @name = 'GrowlerApp'
     @icon = mock('PrettyIcon')
     @notifications = ['YourHamburgerIsReady', 'OhSomeoneElseAteIt']
     @default_notifications = ['ADefaultNotification', *@notifications]
     
+    @center = OSX::NSDistributedNotificationCenter.defaultCenter
+  end
+end
+
+describe 'Growl::Notifier' do
+  include GrowlNotifierSpecHelper
+  
+  before do
+    set_variables!
+    @instance.stubs(:register!)
+    @instance.start @name, @notifications
+  end
+  
+  it "should be a singleton class" do
+    @instance.should.be.instance_of Growl::Notifier
+    @instance.should.be Growl::Notifier.sharedInstance
+  end
+  
+  xit "should not create new instances anymore" do
+    Growl::Notifier.should.not.respond_to :alloc
+  end
+end
+
+describe 'Growl::Notifier#start' do
+  include GrowlNotifierSpecHelper
+  
+  before do
+    set_variables!
+    @instance.stubs(:register!)
     @instance.start @name, @notifications
   end
   
@@ -45,30 +73,63 @@ describe 'Growl::Notifier#start' do
     @instance.start @name, @notifications, nil, @icon
     @instance.application_icon.should.be @icon
   end
+  
+  it "should register the configuration" do
+    @instance.expects(:register!)
+    @instance.start @name, @notifications
+  end
 end
 
-describe 'Growl::Notifier' do
+describe 'Growl::Notifier#register' do
+  include GrowlNotifierSpecHelper
+  
   before do
-    @instance = Growl::Notifier.sharedInstance
+    set_variables!
+    @tiff = mock('TIFFRepresentation')
+    @icon.stubs(:TIFFRepresentation).returns(@tiff)
+  end
+  
+  it "should register itself with Growl" do
+    pid = 54231
+    @instance.stubs(:pid).returns(pid)
     
-    @name = 'GrowlerApp'
-    @icon = mock('Icon')
-    @notifications = ['YourHamburgerIsReady', 'OhSomeoneElseAteIt']
-    @default_notifications = ['ADefaultNotification', *@notifications]
+    @instance.expects(:add_observer).with('onReady:', "Lend Me Some Sugar; I Am Your Neighbor!", false)
+    @instance.expects(:add_observer).with('onClicked:', "GrowlClicked!", true)
+    @instance.expects(:add_observer).with('onTimeout:', "GrowlTimedOut!", true)
+    
+    dict = {
+      :ApplicationName => @name,
+      :ApplicationIcon => @tiff,
+      :AllNotifications => @notifications,
+      :DefaultNotifications => @default_notifications
+    }
+    
+    @center.expects(:objc_send).with(
+      :postNotificationName, :GrowlApplicationRegistrationNotification,
+                    :object, nil,
+                  :userInfo, dict,
+        :deliverImmediately, true
+    )
+    
+    @instance.start @name, @notifications, @default_notifications, @icon
+  end
+end
+
+describe "Growl::Notifier.sharedInstance" do
+  include GrowlNotifierSpecHelper
+  
+  before do
+    set_variables!
   end
   
-  it "should be a singleton class" do
-    @instance.should.be.instance_of Growl::Notifier
-    @instance.should.be Growl::Notifier.sharedInstance
-  end
-  
-  it "should not create new instances anymore" do
-    Growl::Notifier.should.not.respond_to :alloc
-  end
-  
-  xit "should accept a delegate" do
-    delegate = mock('The Notifiers shared instance delegate')
-    @instance.delegate = delegate
-    @instance.delegate.should.be delegate
+  it "should be able to easily add observers to the NSDistributedNotificationCenter" do
+    pid = 54231
+    @instance.stubs(:pid).returns(pid)
+    
+    @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "name", nil)
+    @instance.send(:add_observer, 'selector:', 'name', false)
+    
+    @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "#{@name}-#{pid}-name", nil)
+    @instance.send(:add_observer, 'selector:', 'name', true)
   end
 end

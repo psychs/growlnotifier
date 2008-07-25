@@ -53,26 +53,61 @@ require 'osx/cocoa'
 
 module Growl
   class Notifier < OSX::NSObject
+    GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
+    GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
+    GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
+    
     class << self
       # Returns the singleton instance.
       def sharedInstance
         unless @sharedInstance
           @sharedInstance = alloc.init
-          undef :alloc
         end
         @sharedInstance
       end
     end
     
-    attr_accessor :application_name, :application_icon, :notifications, :default_notifications
+    attr_reader :application_name, :application_icon, :notifications, :default_notifications
     
     def start(application_name, notifications, default_notifications = nil, application_icon = nil)
       @application_name, @notifications, @application_icon = application_name, notifications, application_icon
       @default_notifications = default_notifications || notifications
+      register!
     end
     
     def application_icon
-      @application_icon || OSX::NSApplication.sharedApplication.applicationIconImage
+      @application_icon ||= OSX::NSApplication.sharedApplication.applicationIconImage
+    end
+    
+    private
+    
+    def notification_center
+      OSX::NSDistributedNotificationCenter.defaultCenter
+    end
+    
+    def register!
+      add_observer 'onReady:', GROWL_IS_READY, false
+      add_observer 'onClicked:', GROWL_NOTIFICATION_CLICKED, true
+      add_observer 'onTimeout:', GROWL_NOTIFICATION_TIMED_OUT, true
+      
+      dict = {
+        :ApplicationName => @application_name,
+        :ApplicationIcon => application_icon.TIFFRepresentation,
+        :AllNotifications => @notifications,
+        :DefaultNotifications => @default_notifications
+      }
+      
+      notification_center.objc_send(
+        :postNotificationName, :GrowlApplicationRegistrationNotification,
+                      :object, nil,
+                    :userInfo, dict,
+          :deliverImmediately, true
+      )
+    end
+    
+    def add_observer(selector, name, prepend_name_and_pid)
+      name = "#{@application_name}-#{pid}-#{name}" if prepend_name_and_pid
+      notification_center.addObserver_selector_name_object self, selector, name, nil
     end
   end
 end
