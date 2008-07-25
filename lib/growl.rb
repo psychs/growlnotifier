@@ -63,6 +63,8 @@ module Growl
         @sharedInstance
       end
     end
+    
+    attr_accessor :delegate
   end
 end
 
