@@ -64,7 +64,16 @@ module Growl
       end
     end
     
-    attr_accessor :delegate
+    attr_accessor :application_name, :application_icon, :notifications, :default_notifications
+    
+    def start(application_name, notifications, default_notifications = nil, application_icon = nil)
+      @application_name, @notifications, @application_icon = application_name, notifications, application_icon
+      @default_notifications = default_notifications || notifications
+    end
+    
+    def application_icon
+      @application_icon || OSX::NSApplication.sharedApplication.applicationIconImage
+    end
   end
 end
 
