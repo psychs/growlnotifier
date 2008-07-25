@@ -67,7 +67,7 @@ module Growl
       end
     end
     
-    attr_reader :application_name, :application_icon, :notifications, :default_notifications
+    attr_reader :application_name, :notifications, :default_notifications
     
     def start(application_name, notifications, default_notifications = nil, application_icon = nil)
       @application_name, @notifications, @application_icon = application_name, notifications, application_icon
@@ -77,6 +77,22 @@ module Growl
     
     def application_icon
       @application_icon ||= OSX::NSApplication.sharedApplication.applicationIconImage
+    end
+    
+    def notify(options)
+      dict = {
+        :ApplicationName => @application_name,
+        :ApplicationPID => pid,
+        :NotificationName => options[:name],
+        :NotificationTitle => options[:title],
+        :NotificationDescription => options[:description],
+        :NotificationPriority => options[:priority] || 0
+      }
+      dict[:NotificationIcon] = options[:icon] if options[:icon]
+      dict[:NotificationSticky] = 1 if options[:sticky]
+      dict[:NotificationClickContext] = options[:click_context] if options[:click_context]
+      
+      notification_center.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dict, true)
     end
     
     private

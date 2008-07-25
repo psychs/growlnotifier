@@ -136,4 +136,51 @@ describe "Growl::Notifier.sharedInstance" do
     @center.expects(:addObserver_selector_name_object).with(@instance, 'selector:', "#{@name}-#{@pid}-name", nil)
     @instance.send(:add_observer, 'selector:', 'name', true)
   end
+  
+  it "should send a notification to Growl" do
+    another_icon = mock('Another icon')
+    
+    dict = {
+      :ApplicationName => @name,
+      :ApplicationPID => @pid,
+      :NotificationName => @notifications.first,
+      :NotificationTitle => 'title',
+      :NotificationDescription => 'description',
+      :NotificationPriority => 1,
+      :NotificationIcon => another_icon,
+      :NotificationSticky => 1,
+      :NotificationClickContext => 'click_context'
+    }
+    
+    @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
+    
+    @instance.notify(
+      :name => @notifications.first,
+      :title => 'title',
+      :description => 'description',
+      :click_context => 'click_context',
+      :sticky => true,
+      :priority => 1,
+      :icon => another_icon
+    )
+  end
+  
+  it "should not require all options to be specified when sending a notification to Growl" do
+    dict = {
+      :ApplicationName => @name,
+      :ApplicationPID => @pid,
+      :NotificationName => @notifications.first,
+      :NotificationTitle => 'title',
+      :NotificationDescription => 'description',
+      :NotificationPriority => 0
+    }
+    
+    @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
+    
+    @instance.notify(
+      :name => @notifications.first,
+      :title => 'title',
+      :description => 'description'
+    )
+  end
 end
