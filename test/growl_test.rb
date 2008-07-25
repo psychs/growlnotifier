@@ -12,7 +12,7 @@ describe 'Growl::Notifier' do
     instance.should.be Growl::Notifier.sharedInstance
   end
   
-  it "should not respond to #alloc anymore" do
+  it "should not create new instances anymore" do
     Growl::Notifier.should.not.respond_to :alloc
   end
 end
