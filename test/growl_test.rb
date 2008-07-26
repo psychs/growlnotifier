@@ -63,10 +63,7 @@ describe 'Growl::Notifier#start' do
   end
   
   it "should by default use the NSAppication's sharedApplication icon if none was specified" do
-    app_icon = mock('NSApp Icon')
-    OSX::NSApplication.sharedApplication.stubs(:applicationIconImage).returns(app_icon)
-    
-    @instance.application_icon.should.be app_icon
+    @instance.application_icon.should.be OSX::NSApplication.sharedApplication.applicationIconImage
   end
   
   it "should take an optional application icon" do

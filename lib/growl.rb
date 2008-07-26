@@ -68,18 +68,14 @@ module Growl
       end
     end
     
-    attr_reader :application_name, :notifications, :default_notifications
+    attr_reader :application_name, :application_icon, :notifications, :default_notifications
     attr_accessor :delegate
     
     def start(application_name, notifications, default_notifications = nil, application_icon = nil)
-      @application_name, @notifications, @application_icon = application_name, notifications, application_icon
-      @default_notifications = default_notifications || notifications
+      @application_name, @application_icon = application_name, (application_icon || OSX::NSApplication.sharedApplication.applicationIconImage)
+      @notifications, @default_notifications = notifications, (default_notifications || notifications)
       @callbacks = {}
       register!
-    end
-    
-    def application_icon
-      @application_icon ||= OSX::NSApplication.sharedApplication.applicationIconImage
     end
     
     def notify(notification_name, title, description, options = {}, &callback)
