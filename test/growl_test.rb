@@ -5,6 +5,8 @@ require "mocha"
 
 require File.expand_path('../../lib/growl', __FILE__)
 
+def OSX._ignore_ns_override; true; end
+
 module GrowlNotifierSpecHelper
   def set_variables!
     @instance = Growl::Notifier.sharedInstance
@@ -13,7 +15,9 @@ module GrowlNotifierSpecHelper
     @notifications = ['YourHamburgerIsReady', 'OhSomeoneElseAteIt']
     @default_notifications = ['ADefaultNotification', *@notifications]
     
-    @center = OSX::NSDistributedNotificationCenter.defaultCenter
+    @center = mock('NSDistributedNotificationCenter')
+    @center.stubs(:postNotificationName_object_userInfo_deliverImmediately)
+    OSX::NSDistributedNotificationCenter.stubs(:defaultCenter).returns(@center)
   end
 end
 
