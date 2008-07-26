@@ -59,12 +59,9 @@ module Growl
     GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
     
     class << self
-      # Returns the singleton instance.
+      # Returns the shared instance.
       def sharedInstance
-        unless @sharedInstance
-          @sharedInstance = alloc.init
-        end
-        @sharedInstance
+        @sharedInstance ||= alloc.init
       end
     end
     

@@ -180,42 +180,28 @@ describe "Growl::Notifier.sharedInstance" do
     end
     @instance.notify(@notifications.first, 'title', 'description', &callback)
     
-    notification = stub('clicked notification')
-    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
-    
     @instance.expects(:message_from_callback)
-    @instance.onClicked(notification)
+    @instance.onClicked(stubbed_notification(callback))
     @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be nil
   end
   
   it "should send a message to the delegate if a notification was clicked" do
-    notification = stub('clicked notification')
-    notification.stubs(:userInfo).returns({})
-    
-    delegate = mock('delegate')
-    delegate.expects(:growlNotifier_notificationClicked).with(@instance, notification)
-    @instance.delegate = delegate
-    
+    notification = stubbed_notification
+    assign_delegate.expects(:growlNotifier_notificationClicked).with(@instance, notification)
     @instance.onClicked(notification)
   end
   
   it "should not send a message to the delegate if a notification was clicked but the delegate doesn't respond to the delegate method" do
-    notification = stub('clicked notification')
-    notification.stubs(:userInfo).returns({})
-    
-    delegate = mock('delegate')
-    @instance.delegate = delegate
-    
-    @instance.onClicked(notification)
+    assign_delegate
+    @instance.onClicked(stubbed_notification)
   end
   
   it "should remove a callback handler if the notification that it belongs to times out" do
-    callback = proc { message_from_callback }
+    callback = proc {}
+    notification = stubbed_notification(callback)
+    
     @instance.notify(@notifications.first, 'title', 'description', &callback)
     @instance.delegate = nil
-    
-    notification = stub('clicked notification')
-    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
     
     callback.expects(:call).times(0)
     @instance.onTimeout(notification)
@@ -223,23 +209,28 @@ describe "Growl::Notifier.sharedInstance" do
   end
   
   it "should send a message to the delegate if a notification times out" do
-    notification = stub('timeout notification')
-    notification.stubs(:userInfo).returns({})
-    
-    delegate = mock('delegate')
-    delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, notification)
-    @instance.delegate = delegate
+    notification = stubbed_notification
+    assign_delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, notification)
     
     @instance.onTimeout(notification)
   end
   
   it "should not send a message to the delegate if a notification times out but the delegate doesn't respond to the delegate method" do
-    notification = stub('timeout notification')
-    notification.stubs(:userInfo).returns({})
-    
+    assign_delegate
+    @instance.onTimeout(stubbed_notification)
+  end
+  
+  private
+  
+  def assign_delegate
     delegate = mock('delegate')
     @instance.delegate = delegate
-    
-    @instance.onTimeout(notification)
+    delegate
+  end
+  
+  def stubbed_notification(callback = nil)
+    notification = stub('timeout notification')
+    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
+    notification
   end
 end
