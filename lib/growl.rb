@@ -107,12 +107,12 @@ module Growl
       if callback = @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
         callback.call
       end
-      @delegate.growlNotifier_notificationClicked(self, notification) if @delegate
+      @delegate.growlNotifier_notificationClicked(self, notification) if @delegate && @delegate.respond_to?(:growlNotifier_notificationClicked)
     end
     
     def onTimeout(notification)
       @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
-      @delegate.growlNotifier_notificationTimedOut(self, notification) if @delegate
+      @delegate.growlNotifier_notificationTimedOut(self, notification) if @delegate && @delegate.respond_to?(:growlNotifier_notificationTimedOut)
     end
     
     private

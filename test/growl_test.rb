@@ -199,6 +199,16 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.onClicked(notification)
   end
   
+  it "should not send a message to the delegate if a notification was clicked but the delegate doesn't respond to the delegate method" do
+    notification = stub('clicked notification')
+    notification.stubs(:userInfo).returns({})
+    
+    delegate = mock('delegate')
+    @instance.delegate = delegate
+    
+    @instance.onClicked(notification)
+  end
+  
   it "should remove a callback handler if the notification that it belongs to times out" do
     callback = proc { message_from_callback }
     @instance.notify(@notifications.first, 'title', 'description', &callback)
@@ -218,6 +228,16 @@ describe "Growl::Notifier.sharedInstance" do
     
     delegate = mock('delegate')
     delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, notification)
+    @instance.delegate = delegate
+    
+    @instance.onTimeout(notification)
+  end
+  
+  it "should not send a message to the delegate if a notification times out but the delegate doesn't respond to the delegate method" do
+    notification = stub('timeout notification')
+    notification.stubs(:userInfo).returns({})
+    
+    delegate = mock('delegate')
     @instance.delegate = delegate
     
     @instance.onTimeout(notification)
