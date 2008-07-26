@@ -4,6 +4,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
 task :default => :test
+task :clean => [:clobber_package, :clobber_rdoc]
 
 Rake::TestTask.new do |t|
   t.libs << "test"
