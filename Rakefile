@@ -16,9 +16,7 @@ Rake::RDocTask.new do |rd|
   rd.rdoc_files.include("README", "lib/**/*.rb")
 end
 
-GEM_SPEC = eval(File.read(File.expand_path('../growlnotifier.gemspec', __FILE__)))
-Rake::GemPackageTask.new(GEM_SPEC) do |p|
-  p.gem_spec = GEM_SPEC
+Rake::GemPackageTask.new(eval(File.read('growlnotifier.gemspec'))) do |p|
   p.need_tar = true
   p.need_zip = true
 end
