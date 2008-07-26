@@ -1,4 +1,5 @@
 require 'osx/cocoa'
+require File.expand_path('../growl_helpers', __FILE__)
 
 module Growl
   class Notifier < OSX::NSObject
