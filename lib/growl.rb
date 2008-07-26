@@ -59,7 +59,7 @@ module Growl
     GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
     
     class << self
-      # Returns the shared instance.
+      # Returns the singleton instance of Growl::Notifier with which you register and send your Growl notifications.
       def sharedInstance
         @sharedInstance ||= alloc.init
       end
@@ -68,13 +68,42 @@ module Growl
     attr_reader :application_name, :application_icon, :notifications, :default_notifications
     attr_accessor :delegate
     
+    # Registers the applications metadata and the notifications, that your application might send, to Growl.
+    #
+    # Register the applications name and the notifications that will be used.
+    # * +default_notifications+ defaults to the regular +notifications+.
+    # * +application_icon+ defaults to OSX::NSApplication.sharedApplication.applicationIconImage.
+    #
+    #   Growl::Notifier.sharedInstance.register 'FoodApp', ['YourHamburgerIsReady', 'OhSomeoneElseAteIt']
+    #
+    # Register the applications name, the notifications plus the default notifications that will be used and the icon that's to be used in the Growl notifications.
+    #
+    #   Growl::Notifier.sharedInstance.register 'FoodApp', ['YourHamburgerIsReady', 'OhSomeoneElseAteIt'], ['DefaultNotification], OSX::NSImage.imageNamed('GreasyHamburger')
     def register(application_name, notifications, default_notifications = nil, application_icon = nil)
+      # TODO: What is actually the purpose of default_notifications vs regular notifications?
       @application_name, @application_icon = application_name, (application_icon || OSX::NSApplication.sharedApplication.applicationIconImage)
       @notifications, @default_notifications = notifications, (default_notifications || notifications)
       @callbacks = {}
       send_registration!
     end
     
+    # Sends a Growl notification.
+    #
+    # * +notification_name+ : the name of one of the notifcations that your apllication registered with Growl. See register for more info.
+    # * +title+ : the title that should be used in the Growl notification.
+    # * +description+ : the body of the Grow notification.
+    # * +options+ : specifies a few optional options:
+    #   * <tt>:sticky</tt> : indicates if the Grow notification should "stick" to the screen. Defaults to +false+.
+    #   * <tt>:priority</tt> : sets the priority level of the Growl notification. Defaults to 0.
+    #   * <tt>:icon</tt> : specifies the icon to be used in the Growl notification. Defaults to the registered +application_icon+, see register for more info.
+    #
+    # Simple example:
+    #
+    #   Growl::Notifier.sharedInstance.notify 'YourHamburgerIsReady', 'Your hamburger is ready for consumption!', 'Please pick it up at isle 4.'
+    #
+    # Example with optional options:
+    #
+    #   Growl::Notifier.sharedInstance.notify 'YourHamburgerIsReady', 'Your hamburger is ready for consumption!', 'Please pick it up at isle 4.', :sticky => true, :priority => 1, :icon => OSX::NSImage.imageNamed('SuperBigHamburger')
     def notify(notification_name, title, description, options = {}, &callback)
       dict = {
         :ApplicationName => @application_name,
