@@ -1,25 +1,5 @@
-require "rubygems"
-require "test/unit"
-require "test/spec"
-require "mocha"
-
-require File.expand_path('../../lib/growl', __FILE__)
-
-def OSX._ignore_ns_override; true; end
-
-module GrowlNotifierSpecHelper
-  def set_variables!
-    @instance = Growl::Notifier.sharedInstance
-    @name = 'GrowlerApp'
-    @icon = mock('PrettyIcon')
-    @notifications = ['YourHamburgerIsReady', 'OhSomeoneElseAteIt']
-    @default_notifications = ['ADefaultNotification', *@notifications]
-    
-    @center = mock('NSDistributedNotificationCenter')
-    @center.stubs(:postNotificationName_object_userInfo_deliverImmediately)
-    OSX::NSDistributedNotificationCenter.stubs(:defaultCenter).returns(@center)
-  end
-end
+require File.expand_path('../test_helper', __FILE__)
+require 'growl'
 
 describe 'Growl::Notifier' do
   include GrowlNotifierSpecHelper

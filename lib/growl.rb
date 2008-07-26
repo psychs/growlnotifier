@@ -99,11 +99,21 @@ module Growl
     #
     # Simple example:
     #
-    #   Growl::Notifier.sharedInstance.notify 'YourHamburgerIsReady', 'Your hamburger is ready for consumption!', 'Please pick it up at isle 4.'
+    #   name = 'YourHamburgerIsReady'
+    #   title = 'Your hamburger is ready for consumption!'
+    #   description = 'Please pick it up at isle 4.'
+    #   
+    #   Growl::Notifier.sharedInstance.notify(name, title, description)
     #
     # Example with optional options:
     #
-    #   Growl::Notifier.sharedInstance.notify 'YourHamburgerIsReady', 'Your hamburger is ready for consumption!', 'Please pick it up at isle 4.', :sticky => true, :priority => 1, :icon => OSX::NSImage.imageNamed('SuperBigHamburger')
+    #   Growl::Notifier.sharedInstance.notify(name, title, description, :sticky => true, :priority => 1, :icon => OSX::NSImage.imageNamed('SuperBigHamburger'))
+    #
+    # When you pass notify a block, that block will be used as the callback handler if the Growl notification was clicked. Eg:
+    #
+    #   Growl::Notifier.sharedInstance.notify(name, title, description, :sticky => true) do
+    #     user_clicked_notification_so_do_something!
+    #   end
     def notify(notification_name, title, description, options = {}, &callback)
       dict = {
         :ApplicationName => @application_name,
