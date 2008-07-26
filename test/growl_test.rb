@@ -20,7 +20,7 @@ describe 'Growl::Notifier' do
   end
 end
 
-describe 'Growl::Notifier#start' do
+describe 'Growl::Notifier#register' do
   include GrowlNotifierSpecHelper
   
   before do
@@ -61,7 +61,7 @@ describe 'Growl::Notifier#start' do
   end
 end
 
-describe 'Growl::Notifier#register' do
+describe 'Growl::Notifier#send_registration!' do
   include GrowlNotifierSpecHelper
   
   before do
