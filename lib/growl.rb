@@ -68,11 +68,11 @@ module Growl
     attr_reader :application_name, :application_icon, :notifications, :default_notifications
     attr_accessor :delegate
     
-    def start(application_name, notifications, default_notifications = nil, application_icon = nil)
+    def register(application_name, notifications, default_notifications = nil, application_icon = nil)
       @application_name, @application_icon = application_name, (application_icon || OSX::NSApplication.sharedApplication.applicationIconImage)
       @notifications, @default_notifications = notifications, (default_notifications || notifications)
       @callbacks = {}
-      register!
+      send_registration!
     end
     
     def notify(notification_name, title, description, options = {}, &callback)
@@ -122,7 +122,7 @@ module Growl
       OSX::NSDistributedNotificationCenter.defaultCenter
     end
     
-    def register!
+    def send_registration!
       add_observer 'onReady:', GROWL_IS_READY, false
       add_observer 'onClicked:', GROWL_NOTIFICATION_CLICKED, true
       add_observer 'onTimeout:', GROWL_NOTIFICATION_TIMED_OUT, true

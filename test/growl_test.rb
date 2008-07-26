@@ -26,8 +26,8 @@ describe 'Growl::Notifier' do
   
   before do
     set_variables!
-    @instance.stubs(:register!)
-    @instance.start @name, @notifications
+    @instance.stubs(:send_registration!)
+    @instance.register @name, @notifications
   end
   
   it "should be a singleton class" do
@@ -45,8 +45,8 @@ describe 'Growl::Notifier#start' do
   
   before do
     set_variables!
-    @instance.stubs(:register!)
-    @instance.start @name, @notifications
+    @instance.stubs(:send_registration!)
+    @instance.register @name, @notifications
   end
   
   it "should take the name of the application" do
@@ -62,7 +62,7 @@ describe 'Growl::Notifier#start' do
   end
   
   it "should take an array of notifications that should be registered as the default notifications" do
-    @instance.start @name, @notifications, @default_notifications
+    @instance.register @name, @notifications, @default_notifications
     @instance.default_notifications.should == @default_notifications
   end
   
@@ -71,13 +71,13 @@ describe 'Growl::Notifier#start' do
   end
   
   it "should take an optional application icon" do
-    @instance.start @name, @notifications, nil, @icon
+    @instance.register @name, @notifications, nil, @icon
     @instance.application_icon.should.be @icon
   end
   
   it "should register the configuration" do
-    @instance.expects(:register!)
-    @instance.start @name, @notifications
+    @instance.expects(:send_registration!)
+    @instance.register @name, @notifications
   end
 end
 
@@ -112,7 +112,7 @@ describe 'Growl::Notifier#register' do
         :deliverImmediately, true
     )
     
-    @instance.start @name, @notifications, @default_notifications, @icon
+    @instance.register @name, @notifications, @default_notifications, @icon
   end
 end
 
