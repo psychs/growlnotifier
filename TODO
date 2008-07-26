@@ -1,0 +1,1 @@
+- Maybe define a initWithDelegate initializer? But this might not be necessary because of the sharedInstance.
