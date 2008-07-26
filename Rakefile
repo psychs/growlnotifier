@@ -21,3 +21,10 @@ Rake::GemPackageTask.new(eval(File.read('growlnotifier.gemspec'))) do |p|
   p.need_tar = true
   p.need_zip = true
 end
+
+desc "Run code-coverage analysis using rcov"
+task :coverage do
+  rm_rf "coverage"
+  sh "rcov test/*_test.rb --exclude=mocha,RubyCocoa.framework,osx,rcov"
+  sh "open coverage/index.html"
+end
