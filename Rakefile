@@ -22,6 +22,11 @@ Rake::GemPackageTask.new(eval(File.read('growlnotifier.gemspec'))) do |p|
   p.need_zip = true
 end
 
+desc 'Build and install the gem'
+task :install => :gem do
+  sh "sudo gem install pkg/growlnotifier*.gem"
+end
+
 desc "Run code-coverage analysis using rcov"
 task :coverage do
   rm_rf "coverage"
