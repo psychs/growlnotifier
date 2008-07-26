@@ -148,13 +148,12 @@ describe "Growl::Notifier.sharedInstance" do
       :NotificationDescription => 'description',
       :NotificationPriority => 1,
       :NotificationIcon => another_icon,
-      :NotificationSticky => 1,
-      :NotificationClickContext => 'click_context'
+      :NotificationSticky => 1
     }
     
     @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
     
-    @instance.notify(@notifications.first, 'title', 'description', :click_context => 'click_context', :sticky => true, :priority => 1, :icon => another_icon)
+    @instance.notify(@notifications.first, 'title', 'description', :sticky => true, :priority => 1, :icon => another_icon)
   end
   
   it "should not require all options to be specified when sending a notification to Growl" do
@@ -171,7 +170,59 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.notify(@notifications.first, 'title', 'description')
   end
   
-  xit "should add a click callback handler to the registered callbacks if a block is given to #notify" do
+  it "should add a callback to the callbacks if a block is given to #notify" do
+    callback = proc { message_from_callback }
+    @instance.notify(@notifications.first, 'title', 'description', &callback)
+    @instance.instance_variable_get(:@callbacks)[callback.object_id]
+  end
+  
+  it "should call a callback handler if the notification that it belongs to is clicked and then remove the callback" do
+    callback = nil
+    @instance.instance_eval do
+      callback = proc { message_from_callback }
+    end
+    @instance.notify(@notifications.first, 'title', 'description', &callback)
     
+    notification = stub('clicked notification')
+    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
+    
+    @instance.expects(:message_from_callback)
+    @instance.onClicked(notification)
+    @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be nil
+  end
+  
+  it "should send a message to the delegate if a notification was clicked" do
+    notification = stub('clicked notification')
+    notification.stubs(:userInfo).returns({})
+    
+    delegate = mock('delegate')
+    delegate.expects(:growlNotifier_notificationClicked).with(@instance, notification)
+    @instance.delegate = delegate
+    
+    @instance.onClicked(notification)
+  end
+  
+  it "should remove a callback handler if the notification that it belongs to times out" do
+    callback = proc { message_from_callback }
+    @instance.notify(@notifications.first, 'title', 'description', &callback)
+    @instance.delegate = nil
+    
+    notification = stub('clicked notification')
+    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
+    
+    callback.expects(:call).times(0)
+    @instance.onTimeout(notification)
+    @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be nil
+  end
+  
+  it "should send a message to the delegate if a notification times out" do
+    notification = stub('timeout notification')
+    notification.stubs(:userInfo).returns({})
+    
+    delegate = mock('delegate')
+    delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, notification)
+    @instance.delegate = delegate
+    
+    @instance.onTimeout(notification)
   end
 end

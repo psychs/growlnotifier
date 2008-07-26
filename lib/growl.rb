@@ -56,6 +56,7 @@ module Growl
     GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
     GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
     GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
+    GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
     
     class << self
       # Returns the singleton instance.
@@ -68,10 +69,12 @@ module Growl
     end
     
     attr_reader :application_name, :notifications, :default_notifications
+    attr_accessor :delegate
     
     def start(application_name, notifications, default_notifications = nil, application_icon = nil)
       @application_name, @notifications, @application_icon = application_name, notifications, application_icon
       @default_notifications = default_notifications || notifications
+      @callbacks = {}
       register!
     end
     
@@ -79,7 +82,7 @@ module Growl
       @application_icon ||= OSX::NSApplication.sharedApplication.applicationIconImage
     end
     
-    def notify(notification_name, title, description, options = {})
+    def notify(notification_name, title, description, options = {}, &callback)
       dict = {
         :ApplicationName => @application_name,
         :ApplicationPID => pid,
@@ -90,9 +93,30 @@ module Growl
       }
       dict[:NotificationIcon] = options[:icon] if options[:icon]
       dict[:NotificationSticky] = 1 if options[:sticky]
-      dict[:NotificationClickContext] = options[:click_context] if options[:click_context]
+      
+      if block_given?
+        @callbacks[callback.object_id] = callback
+        dict[:NotificationClickContext] = callback.object_id.to_s
+      end
       
       notification_center.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dict, true)
+    end
+    
+    # FIXME: Do we really need to register again?
+    # def onReady(n)
+    #   register
+    # end
+    
+    def onClicked(notification)
+      if callback = @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
+        callback.call
+      end
+      @delegate.growlNotifier_notificationClicked(self, notification) if @delegate
+    end
+    
+    def onTimeout(notification)
+      @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
+      @delegate.growlNotifier_notificationTimedOut(self, notification) if @delegate
     end
     
     private
@@ -132,103 +156,103 @@ module Growl
   end
 end
 
-module Growl
-  # class Notifier < NSObject
-  #   include OSX
-  #   attr_accessor :delegate
-  #   
-  #   GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
-  #   GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
-  #   GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
-  #   GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
-  #   
-  #   
-  #   def initWithDelegate(delegate)
-  #     init
-  #     @delegate = delegate
-  #     self
-  #   end
-  #   
-  #   def start(appname, notifications, default_notifications=nil, appicon=nil)
-  #     @appname = appname
-  #     @notifications = notifications
-  #     @default_notifications = default_notifications
-  #     @appicon = appicon
-  #     @default_notifications = @notifications unless @default_notifications
-  #     register
-  #   end
-  #   
-  #   def notify(type, title, desc, click_context=nil, sticky=false, priority=0, icon=nil)
-  #     dic = {
-  #       :ApplicationName => @appname,
-  #       :ApplicationPID => NSProcessInfo.processInfo.processIdentifier,
-  #       :NotificationName => type,
-  #       :NotificationTitle => title,
-  #       :NotificationDescription => desc,
-  #       :NotificationPriority => priority,
-  #     }
-  #     dic[:NotificationIcon] = icon.TIFFRepresentation if icon
-  #     dic[:NotificationSticky] = 1 if sticky
-  #     dic[:NotificationClickContext] = click_context if click_context
-  #     
-  #     c = NSDistributedNotificationCenter.defaultCenter
-  #     c.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dic, true)
-  #   end
-  #   
-  #   KEY_TABLE = {
-  #     :type => :NotificationName,
-  #     :title => :NotificationTitle,
-  #     :desc => :NotificationDescription,
-  #     :clickContext => :NotificationClickContext,
-  #     :sticky => :NotificationSticky,
-  #     :priority => :NotificationPriority,
-  #     :icon => :NotificationIcon,
-  #   }
-  #   
-  #   def notifyWith(hash)
-  #     dic = {}
-  #     KEY_TABLE.each {|k,v| dic[v] = hash[k] if hash.key?(k) }
-  #     dic[:ApplicationName] = @appname
-  #     dic[:ApplicationPID] = NSProcessInfo.processInfo.processIdentifier
-  #     
-  #     c = NSDistributedNotificationCenter.defaultCenter
-  #     c.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dic, true)
-  #   end
-  #   
-  #   
-  #   def onReady(n)
-  #     register
-  #   end
-  #   
-  #   def onClicked(n)
-  #     context = n.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_s
-  #     @delegate.growl_onClicked(self, context) if @delegate && @delegate.respond_to?(:growl_onClicked)
-  #   end
-  #   
-  #   def onTimeout(n)
-  #     context = n.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_s
-  #     @delegate.growl_onTimeout(self, context) if @delegate && @delegate.respond_to?(:growl_onTimeout)
-  #   end
-  #   
-  #   
-  #   private
-  #   
-  #   def register
-  #     pid = NSProcessInfo.processInfo.processIdentifier.to_i
-  #     
-  #     c = NSDistributedNotificationCenter.defaultCenter
-  #     c.addObserver_selector_name_object(self, 'onReady:', GROWL_IS_READY, nil)
-  #     c.addObserver_selector_name_object(self, 'onClicked:', "#{@appname}-#{pid}-#{GROWL_NOTIFICATION_CLICKED}", nil)
-  #     c.addObserver_selector_name_object(self, 'onTimeout:', "#{@appname}-#{pid}-#{GROWL_NOTIFICATION_TIMED_OUT}", nil)
-  #     
-  #     icon = @appicon || NSApplication.sharedApplication.applicationIconImage
-  #     dic = {
-  #       :ApplicationName => @appname,
-  #       :AllNotifications => @notifications,
-  #       :DefaultNotifications => @default_notifications,
-  #       :ApplicationIcon => icon.TIFFRepresentation,
-  #     }
-  #     c.postNotificationName_object_userInfo_deliverImmediately(:GrowlApplicationRegistrationNotification, nil, dic, true)
-  #   end
-  # end
-end
+# module Growl
+#   class Notifier < NSObject
+#     include OSX
+#     attr_accessor :delegate
+#     
+#     GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
+#     GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
+#     GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
+#     GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
+#     
+#     
+#     def initWithDelegate(delegate)
+#       init
+#       @delegate = delegate
+#       self
+#     end
+#     
+#     def start(appname, notifications, default_notifications=nil, appicon=nil)
+#       @appname = appname
+#       @notifications = notifications
+#       @default_notifications = default_notifications
+#       @appicon = appicon
+#       @default_notifications = @notifications unless @default_notifications
+#       register
+#     end
+#     
+#     def notify(type, title, desc, click_context=nil, sticky=false, priority=0, icon=nil)
+#       dic = {
+#         :ApplicationName => @appname,
+#         :ApplicationPID => NSProcessInfo.processInfo.processIdentifier,
+#         :NotificationName => type,
+#         :NotificationTitle => title,
+#         :NotificationDescription => desc,
+#         :NotificationPriority => priority,
+#       }
+#       dic[:NotificationIcon] = icon.TIFFRepresentation if icon
+#       dic[:NotificationSticky] = 1 if sticky
+#       dic[:NotificationClickContext] = click_context if click_context
+#       
+#       c = NSDistributedNotificationCenter.defaultCenter
+#       c.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dic, true)
+#     end
+#     
+#     KEY_TABLE = {
+#       :type => :NotificationName,
+#       :title => :NotificationTitle,
+#       :desc => :NotificationDescription,
+#       :clickContext => :NotificationClickContext,
+#       :sticky => :NotificationSticky,
+#       :priority => :NotificationPriority,
+#       :icon => :NotificationIcon,
+#     }
+#     
+#     def notifyWith(hash)
+#       dic = {}
+#       KEY_TABLE.each {|k,v| dic[v] = hash[k] if hash.key?(k) }
+#       dic[:ApplicationName] = @appname
+#       dic[:ApplicationPID] = NSProcessInfo.processInfo.processIdentifier
+#       
+#       c = NSDistributedNotificationCenter.defaultCenter
+#       c.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dic, true)
+#     end
+#     
+#     
+#     def onReady(n)
+#       register
+#     end
+#     
+#     def onClicked(n)
+#       context = n.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_s
+#       @delegate.growl_onClicked(self, context) if @delegate && @delegate.respond_to?(:growl_onClicked)
+#     end
+#     
+#     def onTimeout(n)
+#       context = n.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_s
+#       @delegate.growl_onTimeout(self, context) if @delegate && @delegate.respond_to?(:growl_onTimeout)
+#     end
+#     
+#     
+#     private
+#     
+#     def register
+#       pid = NSProcessInfo.processInfo.processIdentifier.to_i
+#       
+#       c = NSDistributedNotificationCenter.defaultCenter
+#       c.addObserver_selector_name_object(self, 'onReady:', GROWL_IS_READY, nil)
+#       c.addObserver_selector_name_object(self, 'onClicked:', "#{@appname}-#{pid}-#{GROWL_NOTIFICATION_CLICKED}", nil)
+#       c.addObserver_selector_name_object(self, 'onTimeout:', "#{@appname}-#{pid}-#{GROWL_NOTIFICATION_TIMED_OUT}", nil)
+#       
+#       icon = @appicon || NSApplication.sharedApplication.applicationIconImage
+#       dic = {
+#         :ApplicationName => @appname,
+#         :AllNotifications => @notifications,
+#         :DefaultNotifications => @default_notifications,
+#         :ApplicationIcon => icon.TIFFRepresentation,
+#       }
+#       c.postNotificationName_object_userInfo_deliverImmediately(:GrowlApplicationRegistrationNotification, nil, dic, true)
+#     end
+#   end
+# end
