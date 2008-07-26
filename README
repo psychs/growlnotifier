@@ -5,6 +5,8 @@
 Growl::Notifier is a class that allows your application to post notifications to the Growl daemon.
 It can also receive clicked and timeout notifications as well as take blocks for clicked callback handlers.
 
+This is an extraction and cleanup of the Growl code from LimeChat (http://github.com/psychs/limechat/tree/master) and later on extended for WebApp (http://github.com/alloy/webapp-app/tree/master).
+
 == Requirements
 
 * Mac OS X 10.4 or 10.5
