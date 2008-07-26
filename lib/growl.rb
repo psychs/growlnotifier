@@ -79,13 +79,13 @@ module Growl
       @application_icon ||= OSX::NSApplication.sharedApplication.applicationIconImage
     end
     
-    def notify(options)
+    def notify(notification_name, title, description, options = {})
       dict = {
         :ApplicationName => @application_name,
         :ApplicationPID => pid,
-        :NotificationName => options[:name],
-        :NotificationTitle => options[:title],
-        :NotificationDescription => options[:description],
+        :NotificationName => notification_name,
+        :NotificationTitle => title,
+        :NotificationDescription => description,
         :NotificationPriority => options[:priority] || 0
       }
       dict[:NotificationIcon] = options[:icon] if options[:icon]

@@ -154,15 +154,7 @@ describe "Growl::Notifier.sharedInstance" do
     
     @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
     
-    @instance.notify(
-      :name => @notifications.first,
-      :title => 'title',
-      :description => 'description',
-      :click_context => 'click_context',
-      :sticky => true,
-      :priority => 1,
-      :icon => another_icon
-    )
+    @instance.notify(@notifications.first, 'title', 'description', :click_context => 'click_context', :sticky => true, :priority => 1, :icon => another_icon)
   end
   
   it "should not require all options to be specified when sending a notification to Growl" do
@@ -176,11 +168,10 @@ describe "Growl::Notifier.sharedInstance" do
     }
     
     @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
+    @instance.notify(@notifications.first, 'title', 'description')
+  end
+  
+  xit "should add a click callback handler to the registered callbacks if a block is given to #notify" do
     
-    @instance.notify(
-      :name => @notifications.first,
-      :title => 'title',
-      :description => 'description'
-    )
   end
 end
