@@ -84,10 +84,10 @@ module Growl
       notification_center.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dict, true)
     end
     
-    # FIXME: Do we really need to register again?
-    # def onReady(n)
-    #   register
-    # end
+    def onReady(notification)
+      # Register again when Growl restarted
+      send_registration!
+    end
     
     def onClicked(notification)
       if callback = @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
