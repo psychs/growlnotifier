@@ -93,7 +93,6 @@ module Growl
     end
     
     def onReady(notification)
-      # Register again when Growl restarted
       send_registration!
     end
     

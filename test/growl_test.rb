@@ -216,6 +216,11 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.onTimeout(stubbed_notification)
   end
   
+  it "should resend the registration data to Growl if Growl was restarted for some reason" do
+    @instance.expects(:send_registration!)
+    @instance.onReady(nil)
+  end
+  
   private
   
   def assign_delegate
