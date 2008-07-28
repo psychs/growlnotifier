@@ -76,10 +76,13 @@ module Growl
       dict[:NotificationIcon] = options[:icon] if options[:icon]
       dict[:NotificationSticky] = 1 if options[:sticky]
       
+      context = {}
+      context[:user_click_context] = options[:click_context] if options[:click_context]
       if block_given?
         @callbacks[callback.object_id] = callback
-        dict[:NotificationClickContext] = callback.object_id.to_s
+        context[:callback_object_id] = callback.object_id.to_s
       end
+      dict[:NotificationClickContext] = context unless context.empty?
       
       notification_center.postNotificationName_object_userInfo_deliverImmediately(:GrowlNotification, nil, dict, true)
     end
@@ -90,15 +93,33 @@ module Growl
     end
     
     def onClicked(notification)
-      if callback = @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
-        callback.call
+      context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
+
+      if context && context.is_a?(OSX::NSDictionary)
+        user_context = context[:user_click_context]
+        callback_object_id = context[:callback_object_id]
+        if callback_object_id && (callback = @callbacks.delete(callback_object_id.to_i))
+          callback.call
+        end
+      else
+        user_context = nil
       end
-      @delegate.growlNotifier_notificationClicked(self, notification) if @delegate && @delegate.respond_to?(:growlNotifier_notificationClicked)
+      
+      @delegate.growlNotifier_notificationClicked(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifier_notificationClicked)
     end
     
     def onTimeout(notification)
-      @callbacks.delete(notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i)
-      @delegate.growlNotifier_notificationTimedOut(self, notification) if @delegate && @delegate.respond_to?(:growlNotifier_notificationTimedOut)
+      context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
+      
+      if context && context.is_a?(OSX::NSDictionary)
+        callback_object_id = context[:callback_object_id]
+        @callbacks.delete(callback_object_id.to_i) if callback_object_id
+        user_context = context[:user_click_context]
+      else
+        user_context = nil
+      end
+      
+      @delegate.growlNotifier_notificationTimedOut(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifier_notificationTimedOut)
     end
     
     private
