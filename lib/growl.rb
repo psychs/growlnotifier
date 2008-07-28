@@ -8,6 +8,14 @@ module Growl
     GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
     GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
     
+    PRIORITIES = {
+      :emergency =>  2,
+      :high      =>  1,
+      :normal    =>  0,
+      :moderate  => -1,
+      :very_low  => -2,
+    }
+    
     class << self
       # Returns the singleton instance of Growl::Notifier with which you register and send your Growl notifications.
       def sharedInstance
@@ -71,7 +79,7 @@ module Growl
         :NotificationName => notification_name,
         :NotificationTitle => title,
         :NotificationDescription => description,
-        :NotificationPriority => options[:priority] || 0
+        :NotificationPriority => PRIORITIES[options[:priority]] || options[:priority] || 0
       }
       dict[:NotificationIcon] = options[:icon] if options[:icon]
       dict[:NotificationSticky] = 1 if options[:sticky]
