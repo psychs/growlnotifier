@@ -38,12 +38,12 @@ How to receive clicked and timeout notifications in your application:
       end
     end
 
-    def growlNotifier_notificationClicked(sender, notification)
-      puts notification.userInfo['ClickedContext']
+    def growlNotifier_notificationClicked(sender, context)
+      puts context
     end
 
-    def growlNotifier_notificationTimedOut(sender, notification)
-      puts notification.userInfo['ClickedContext']
+    def growlNotifier_notificationTimedOut(sender, context)
+      puts context
     end
   end
 

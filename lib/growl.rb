@@ -85,7 +85,7 @@ module Growl
       dict[:NotificationSticky] = 1 if options[:sticky]
       
       context = {}
-      context[:user_click_context] = options.delete(:click_context) if options[:click_context]
+      context[:user_click_context] = options[:click_context] if options[:click_context]
       if block_given?
         @callbacks[callback.object_id] = callback
         context[:callback_object_id] = callback.object_id.to_s
