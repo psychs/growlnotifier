@@ -151,6 +151,18 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.notify(@notifications.first, 'title', 'description')
   end
   
+  it "should take a symbol instead of an integer to specify the priority level when sending a notification to Growl" do
+    priority_table = { :very_low => -2, :moderate => -1, :normal => 0, :high => 1, :emergency => 2 }
+    
+    priority_table.each do |key, value|
+      @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with do |name, object, info, immediately|
+        info[:NotificationPriority] == value
+      end
+      
+      @instance.notify(@notifications.first, 'title', 'description', :priority => key)
+    end
+  end
+  
   it "should add a callback to the callbacks if a block is given to #notify" do
     callback = proc { message_from_callback }
     @instance.notify(@notifications.first, 'title', 'description', &callback)
@@ -202,6 +214,11 @@ describe "Growl::Notifier.sharedInstance" do
   it "should not send a message to the delegate if a notification times out but the delegate doesn't respond to the delegate method" do
     assign_delegate
     @instance.onTimeout(stubbed_notification)
+  end
+  
+  it "should resend the registration data to Growl if Growl was restarted for some reason" do
+    @instance.expects(:send_registration!)
+    @instance.onReady(nil)
   end
   
   private
