@@ -27,6 +27,8 @@ module Growl
     attr_accessor :delegate
     
     # Registers the applications metadata and the notifications, that your application might send, to Growl.
+    # The +default_notifications+ are notifications that will be enabled by default, the regular +notifications+ are
+    # optional and should be enabled by the user in the Growl system preferences.
     #
     # Register the applications name and the notifications that will be used.
     # * +default_notifications+ defaults to the regular +notifications+.
