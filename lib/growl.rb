@@ -118,7 +118,7 @@ module Growl
         user_context = context[:user_click_context]
       end
       
-      @delegate.growlNotifier_notificationTimedOut(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifier_notificationTimedOut)
+      @delegate.growlNotifierTimedOut_context(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifierTimedOut_context)
     end
     
     private

@@ -214,14 +214,14 @@ describe "Growl::Notifier.sharedInstance" do
   
   it "should send a message to the delegate if a notification times out with the specified context" do
     notification = stubbed_notification(:user_click_context => 'foo')
-    assign_delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, 'foo')
+    assign_delegate.expects(:growlNotifierTimedOut_context).with(@instance, 'foo')
     
     @instance.onTimeout(notification)
   end
   
   it "should send a message to the delegate if a notification times out with nil as the context in none was specified" do
     notification = stubbed_notification
-    assign_delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, nil)
+    assign_delegate.expects(:growlNotifierTimedOut_context).with(@instance, nil)
     
     @instance.onTimeout(notification)
   end
