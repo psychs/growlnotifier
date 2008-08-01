@@ -38,7 +38,6 @@ module Growl
     #
     #   Growl::Notifier.sharedInstance.register 'FoodApp', ['YourHamburgerIsReady', 'OhSomeoneElseAteIt'], ['DefaultNotification], OSX::NSImage.imageNamed('GreasyHamburger')
     def register(application_name, notifications, default_notifications = nil, application_icon = nil)
-      # TODO: What is actually the purpose of default_notifications vs regular notifications?
       @application_name, @application_icon = application_name, (application_icon || OSX::NSApplication.sharedApplication.applicationIconImage)
       @notifications, @default_notifications = notifications, (default_notifications || notifications)
       @callbacks = {}
