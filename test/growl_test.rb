@@ -1,5 +1,5 @@
 require File.expand_path('../test_helper', __FILE__)
-require 'growl'
+require File.expand_path('../../lib/growl', __FILE__)
 
 describe 'Growl::Notifier' do
   include GrowlNotifierSpecHelper

@@ -1,6 +1,5 @@
 require File.expand_path('../test_helper', __FILE__)
-require 'growl'
-require 'growl_helpers'
+require File.expand_path('../../lib/growl_helpers', __FILE__)
 
 class Foo < OSX::NSObject
   include Growl
