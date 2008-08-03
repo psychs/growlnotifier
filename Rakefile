@@ -23,7 +23,6 @@ begin
     p.url = "http://growlnotifier.rubyforge.org/"
     p.clean_globs = ['coverage'] # Remove this directory on "rake clean"
     p.remote_rdoc_dir = '' # Release to root
-    p.development_dependencies = ['hoe']
   end
 rescue LoadError
 end
