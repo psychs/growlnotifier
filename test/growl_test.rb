@@ -116,6 +116,8 @@ describe "Growl::Notifier.sharedInstance" do
   
   it "should send a notification to Growl" do
     another_icon = mock('Another icon')
+    another_icons_tiff_rep = mock('Another icons tiff representation')
+    another_icon.stubs(:TIFFRepresentation).returns(another_icons_tiff_rep)
     
     dict = {
       :ApplicationName => @name,
@@ -124,7 +126,7 @@ describe "Growl::Notifier.sharedInstance" do
       :NotificationTitle => 'title',
       :NotificationDescription => 'description',
       :NotificationPriority => 1,
-      :NotificationIcon => another_icon,
+      :NotificationIcon => another_icons_tiff_rep,
       :NotificationSticky => 1,
       :NotificationClickContext => { :user_click_context => 'foo' }
     }
