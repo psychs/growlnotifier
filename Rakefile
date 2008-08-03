@@ -19,7 +19,7 @@ begin
     p.author = ["Satoshi Nakagawa", "Eloy Duran"]
     p.description = "A ruby library which allows you to send Growl notifications."
     p.email = ["psychs@limechat.net", "e.duran@superalloy.nl"]
-    p.summary = "A ruby library which allows you to send Growl notifications."
+    p.summary = "Growl::Notifier is a OSX RubyCocoa class that allows your application to post notifications to the Growl daemon."
     p.url = "http://growlnotifier.rubyforge.org/"
     p.clean_globs = ['coverage'] # Remove this directory on "rake clean"
     p.remote_rdoc_dir = '' # Release to root
