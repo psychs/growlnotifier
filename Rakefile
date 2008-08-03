@@ -1,18 +1,30 @@
 require 'rubygems'
 require 'rake/testtask'
 
-require 'rubygems'
-require 'hoe'
 require 'lib/growl.rb'
 
-Hoe.new('GrowlNotifier', Growl::Notifier::VERSION) do |p|
-  p.author = ["Satoshi Nakagawa", "Eloy Duran"]
-  p.description = "A ruby library which allows you to send Growl notifications."
-  p.email = ["psychs@limechat.net", "e.duran@superalloy.nl"]
-  p.summary = "A ruby library which allows you to send Growl notifications."
-  p.url = "http://growlnotifier.rubyforge.org/"
-  p.clean_globs = ['coverage'] # Remove this directory on "rake clean"
-  p.remote_rdoc_dir = '' # Release to root
+# Install the Hoe gem to be able to use the deploy tasks.
+begin
+  require 'hoe'
+  
+  class Hoe
+    def extra_deps
+      @extra_deps.reject do |x|
+        Array(x).first == 'hoe'
+      end
+    end
+  end
+  
+  Hoe.new('GrowlNotifier', Growl::Notifier::VERSION) do |p|
+    p.author = ["Satoshi Nakagawa", "Eloy Duran"]
+    p.description = "A ruby library which allows you to send Growl notifications."
+    p.email = ["psychs@limechat.net", "e.duran@superalloy.nl"]
+    p.summary = "A ruby library which allows you to send Growl notifications."
+    p.url = "http://growlnotifier.rubyforge.org/"
+    p.clean_globs = ['coverage'] # Remove this directory on "rake clean"
+    p.remote_rdoc_dir = '' # Release to root
+  end
+rescue LoadError
 end
 
 task :default => :test
