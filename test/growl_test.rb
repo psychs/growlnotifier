@@ -1,5 +1,5 @@
 require File.expand_path('../test_helper', __FILE__)
-require 'growl'
+require File.expand_path('../../lib/growl', __FILE__)
 
 describe 'Growl::Notifier' do
   include GrowlNotifierSpecHelper
@@ -13,10 +13,6 @@ describe 'Growl::Notifier' do
   it "should be a singleton class" do
     @instance.should.be.instance_of Growl::Notifier
     @instance.should.be Growl::Notifier.sharedInstance
-  end
-  
-  xit "should not create new instances anymore" do
-    Growl::Notifier.should.not.respond_to :alloc
   end
 end
 
@@ -129,12 +125,13 @@ describe "Growl::Notifier.sharedInstance" do
       :NotificationDescription => 'description',
       :NotificationPriority => 1,
       :NotificationIcon => another_icon,
-      :NotificationSticky => 1
+      :NotificationSticky => 1,
+      :NotificationClickContext => { :user_click_context => 'foo' }
     }
     
     @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
     
-    @instance.notify(@notifications.first, 'title', 'description', :sticky => true, :priority => 1, :icon => another_icon)
+    @instance.notify(@notifications.first, 'title', 'description', :sticky => true, :priority => 1, :icon => another_icon, :click_context => 'foo')
   end
   
   it "should not require all options to be specified when sending a notification to Growl" do
@@ -165,8 +162,13 @@ describe "Growl::Notifier.sharedInstance" do
   
   it "should add a callback to the callbacks if a block is given to #notify" do
     callback = proc { message_from_callback }
-    @instance.notify(@notifications.first, 'title', 'description', &callback)
-    @instance.instance_variable_get(:@callbacks)[callback.object_id]
+    @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with do |name, object, info, immediately|
+      info[:NotificationClickContext] = { :callback_object_id => callback.object_id, :user_click_context => 'foo' }
+    end
+    
+    @instance.notify(@notifications.first, 'title', 'description', { :click_context => 'foo' }, &callback)
+    
+    @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be callback
   end
   
   it "should call a callback handler if the notification that it belongs to is clicked and then remove the callback" do
@@ -177,13 +179,19 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.notify(@notifications.first, 'title', 'description', &callback)
     
     @instance.expects(:message_from_callback)
-    @instance.onClicked(stubbed_notification(callback))
+    @instance.onClicked(stubbed_notification(:callback_object_id => callback.object_id.to_s.to_ns))
     @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be nil
   end
   
-  it "should send a message to the delegate if a notification was clicked" do
+  it "should send a message to the delegate if a notification was clicked with the specified context" do
+    notification = stubbed_notification(:user_click_context => 'foo')
+    assign_delegate.expects(:growlNotifierClicked_context).with(@instance, 'foo')
+    @instance.onClicked(notification)
+  end
+  
+  it "should send a message to the delegate if a notification was clicked with nil as the context if none was specified" do
     notification = stubbed_notification
-    assign_delegate.expects(:growlNotifier_notificationClicked).with(@instance, notification)
+    assign_delegate.expects(:growlNotifierClicked_context).with(@instance, nil)
     @instance.onClicked(notification)
   end
   
@@ -194,7 +202,7 @@ describe "Growl::Notifier.sharedInstance" do
   
   it "should remove a callback handler if the notification that it belongs to times out" do
     callback = proc {}
-    notification = stubbed_notification(callback)
+    notification = stubbed_notification(:callback_object_id => callback.object_id.to_s.to_ns)
     
     @instance.notify(@notifications.first, 'title', 'description', &callback)
     @instance.delegate = nil
@@ -204,9 +212,16 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.instance_variable_get(:@callbacks)[callback.object_id].should.be nil
   end
   
-  it "should send a message to the delegate if a notification times out" do
+  it "should send a message to the delegate if a notification times out with the specified context" do
+    notification = stubbed_notification(:user_click_context => 'foo')
+    assign_delegate.expects(:growlNotifierTimedOut_context).with(@instance, 'foo')
+    
+    @instance.onTimeout(notification)
+  end
+  
+  it "should send a message to the delegate if a notification times out with nil as the context in none was specified" do
     notification = stubbed_notification
-    assign_delegate.expects(:growlNotifier_notificationTimedOut).with(@instance, notification)
+    assign_delegate.expects(:growlNotifierTimedOut_context).with(@instance, nil)
     
     @instance.onTimeout(notification)
   end
@@ -229,9 +244,9 @@ describe "Growl::Notifier.sharedInstance" do
     delegate
   end
   
-  def stubbed_notification(callback = nil)
+  def stubbed_notification(options = {})
     notification = stub('timeout notification')
-    notification.stubs(:userInfo).returns("ClickedContext" => callback.object_id.to_s.to_ns)
+    notification.stubs(:userInfo).returns("ClickedContext" => options.to_ns)
     notification
   end
 end

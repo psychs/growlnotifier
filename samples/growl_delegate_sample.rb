@@ -16,12 +16,12 @@ class GrowlController < OSX::NSObject
     end
   end
 
-  def growlNotifier_notificationClicked(sender, context)
+  def growlNotifierClicked_context(sender, context)
     puts "Clicked: #{context}"
     checkCount
   end
 
-  def growlNotifier_notificationTimedOut(sender, context)
+  def growlNotifierTimedOut_context(sender, context)
     puts "Timed out: #{context}"
     checkCount
   end

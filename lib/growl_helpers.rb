@@ -1,3 +1,5 @@
+require File.expand_path('../growl', __FILE__)
+
 # Defines a few convenience methods that you can use in your class if you include the Growl module.
 # Eg:
 #

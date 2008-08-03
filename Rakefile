@@ -1,30 +1,26 @@
 require 'rubygems'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+
+require 'rubygems'
+require 'hoe'
+require 'lib/growl.rb'
+
+Hoe.new('GrowlNotifier', Growl::Notifier::VERSION) do |p|
+  p.author = ["Satoshi Nakagawa", "Eloy Duran"]
+  p.description = "A ruby library which allows you to send Growl notifications."
+  p.email = ["psychs@limechat.net", "e.duran@superalloy.nl"]
+  p.summary = "A ruby library which allows you to send Growl notifications."
+  p.url = "http://growlnotifier.rubyforge.org/"
+  p.clean_globs = ['coverage'] # Remove this directory on "rake clean"
+  p.remote_rdoc_dir = '' # Release to root
+end
 
 task :default => :test
-task :clean => [:clobber_package, :clobber_rdoc]
 
 Rake::TestTask.new do |t|
   t.libs << "test"
   t.test_files = FileList['test/*_test.rb']
   t.options = '-rs'
-end
-
-Rake::RDocTask.new do |rd|
-  rd.main = "README"
-  rd.rdoc_files.include("README", "lib/**/*.rb")
-end
-
-Rake::GemPackageTask.new(eval(File.read('growlnotifier.gemspec'))) do |p|
-  p.need_tar = true
-  p.need_zip = true
-end
-
-desc 'Build and install the gem'
-task :install => :gem do
-  sh "sudo gem install pkg/growlnotifier*.gem"
 end
 
 desc "Run code-coverage analysis using rcov"

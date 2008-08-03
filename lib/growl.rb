@@ -1,8 +1,9 @@
 require 'osx/cocoa'
-require File.expand_path('../growl_helpers', __FILE__)
 
 module Growl
   class Notifier < OSX::NSObject
+    VERSION = '1.0'
+    
     GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
     GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
     GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
@@ -27,6 +28,8 @@ module Growl
     attr_accessor :delegate
     
     # Registers the applications metadata and the notifications, that your application might send, to Growl.
+    # The +default_notifications+ are notifications that will be enabled by default, the regular +notifications+ are
+    # optional and should be enabled by the user in the Growl system preferences.
     #
     # Register the applications name and the notifications that will be used.
     # * +default_notifications+ defaults to the regular +notifications+.
@@ -38,7 +41,6 @@ module Growl
     #
     #   Growl::Notifier.sharedInstance.register 'FoodApp', ['YourHamburgerIsReady', 'OhSomeoneElseAteIt'], ['DefaultNotification], OSX::NSImage.imageNamed('GreasyHamburger')
     def register(application_name, notifications, default_notifications = nil, application_icon = nil)
-      # TODO: What is actually the purpose of default_notifications vs regular notifications?
       @application_name, @application_icon = application_name, (application_icon || OSX::NSApplication.sharedApplication.applicationIconImage)
       @notifications, @default_notifications = notifications, (default_notifications || notifications)
       @callbacks = {}
@@ -100,33 +102,25 @@ module Growl
     end
     
     def onClicked(notification)
-      context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
-
-      if context && context.is_a?(OSX::NSDictionary)
+      user_context = nil
+      if context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
         user_context = context[:user_click_context]
-        callback_object_id = context[:callback_object_id]
-        if callback_object_id && (callback = @callbacks.delete(callback_object_id.to_i))
-          callback.call
+        if callback_object_id = context[:callback_object_id]
+          @callbacks.delete(callback_object_id.to_i).call
         end
-      else
-        user_context = nil
       end
       
-      @delegate.growlNotifier_notificationClicked(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifier_notificationClicked)
+      @delegate.growlNotifierClicked_context(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifierClicked_context)
     end
     
     def onTimeout(notification)
-      context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
-      
-      if context && context.is_a?(OSX::NSDictionary)
-        callback_object_id = context[:callback_object_id]
-        @callbacks.delete(callback_object_id.to_i) if callback_object_id
+      user_context = nil
+      if context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
+        @callbacks.delete(context[:callback_object_id].to_i) if context[:callback_object_id]
         user_context = context[:user_click_context]
-      else
-        user_context = nil
       end
       
-      @delegate.growlNotifier_notificationTimedOut(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifier_notificationTimedOut)
+      @delegate.growlNotifierTimedOut_context(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifierTimedOut_context)
     end
     
     private
