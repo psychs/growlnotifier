@@ -25,6 +25,7 @@ A simple example:
 
 How to receive clicked and timeout notifications in your application:
 
+  require 'rubygems'
   require 'growl'
 
   class GrowlController < OSX::NSObject
@@ -49,6 +50,7 @@ How to receive clicked and timeout notifications in your application:
 
 Include the Growl module into your class to get access to a few convenience methods:
 
+  require 'rubygems'
   require 'growl'
 
   class GrowlController < OSX::NSObject
