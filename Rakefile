@@ -15,7 +15,7 @@ begin
     end
   end
   
-  Hoe.new('GrowlNotifier', Growl::Notifier::VERSION) do |p|
+  Hoe.new('growlnotifier', Growl::Notifier::VERSION) do |p|
     p.author = ["Satoshi Nakagawa", "Eloy Duran"]
     p.description = "A ruby library which allows you to send Growl notifications."
     p.email = ["psychs@limechat.net", "e.duran@superalloy.nl"]
