@@ -1,5 +1,5 @@
-require 'osx/cocoa'
-require File.expand_path('../../lib/growl_helpers', __FILE__)
+require 'rubygems'
+require 'growl_helpers'
 
 class GrowlController < OSX::NSObject
   # Makes the #growl and #sticky_growl shortcut methods available.

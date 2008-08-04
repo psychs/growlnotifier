@@ -1,5 +1,5 @@
-require 'osx/cocoa'
-require File.expand_path('../../lib/growl', __FILE__)
+require 'rubygems'
+require 'growl'
 
 class GrowlController < OSX::NSObject
   HELLO_TYPE = 'Hello message received'
