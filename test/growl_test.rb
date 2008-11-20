@@ -97,7 +97,7 @@ describe "Growl::Notifier.sharedInstance" do
   
   before do
     set_variables!
-    
+    @instance.always_callback = false
     @pid = 54231
     OSX::NSProcessInfo.processInfo.stubs(:processIdentifier).returns(@pid)
   end
@@ -144,6 +144,23 @@ describe "Growl::Notifier.sharedInstance" do
       :NotificationTitle => 'title',
       :NotificationDescription => 'description',
       :NotificationPriority => 0
+    }
+    
+    @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)
+    @instance.notify(@notifications.first, 'title', 'description')
+  end
+  
+  it "should use the applications name as the click context if always_callback is set to true" do
+    @instance.always_callback = true
+    
+    dict = {
+      :ApplicationName => @name,
+      :ApplicationPID => @pid,
+      :NotificationName => @notifications.first,
+      :NotificationTitle => 'title',
+      :NotificationDescription => 'description',
+      :NotificationPriority => 0,
+      :NotificationClickContext => { :user_click_context => @name }
     }
     
     @center.expects(:postNotificationName_object_userInfo_deliverImmediately).with(:GrowlNotification, nil, dict, true)

@@ -27,6 +27,14 @@ module Growl
     attr_reader :application_name, :application_icon, :notifications, :default_notifications
     attr_accessor :delegate
     
+    # Set to +true+ if you want to receive delegate callback messages,
+    # <tt>growlNotifierClicked_context</tt> & <tt>growlNotifierTimedOut_context</tt>,
+    # without the need to specify a <tt>:click_context</tt>.
+    #
+    # The default is +false+, which means your application won't receive any delegate
+    # callback messages if the <tt>:click_context</tt> is omitted.
+    attr_accessor :always_callback
+    
     # Registers the applications metadata and the notifications, that your application might send, to Growl.
     # The +default_notifications+ are notifications that will be enabled by default, the regular +notifications+ are
     # optional and should be enabled by the user in the Growl system preferences.
@@ -55,6 +63,7 @@ module Growl
     # * +options+ : specifies a few optional options:
     #   * <tt>:sticky</tt> : indicates if the Grow notification should "stick" to the screen. Defaults to +false+.
     #   * <tt>:priority</tt> : sets the priority level of the Growl notification. Defaults to 0.
+    #   * <tt>:click_context</tt> : a string describing the context of the notification. This is send back to the delegate so you can check what kind of notification it was. If omitted, no delegate messages will be send. You can disable this behaviour by setting always_callback to +true+.
     #   * <tt>:icon</tt> : specifies the icon to be used in the Growl notification. Defaults to the registered +application_icon+, see register for more info.
     #
     # Simple example:
@@ -88,6 +97,8 @@ module Growl
       
       context = {}
       context[:user_click_context] = options[:click_context] if options[:click_context]
+      context[:user_click_context] = @application_name if options[:click_context].nil? && always_callback
+      
       if block_given?
         @callbacks[callback.object_id] = callback
         context[:callback_object_id] = callback.object_id.to_s
