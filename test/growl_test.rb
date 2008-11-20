@@ -208,8 +208,9 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.onClicked(notification)
   end
   
-  it "should send a message to the delegate if a notification was clicked with nil as the context if none was specified" do
-    notification = stubbed_notification
+  it "should send a message to the delegate without a click_context if always_callback is enabled and no :click_context was specified" do
+    @instance.always_callback = true
+    notification = stubbed_notification(:user_click_context => @name)
     assign_delegate.expects(:growlNotifierClicked_context).with(@instance, nil)
     @instance.onClicked(notification)
   end
@@ -238,8 +239,9 @@ describe "Growl::Notifier.sharedInstance" do
     @instance.onTimeout(notification)
   end
   
-  it "should send a message to the delegate if a notification times out with nil as the context in none was specified" do
-    notification = stubbed_notification
+  it "should send a message to the delegate if a notification times out, without a click_context if always_callback is enabled and no :click_context was specified" do
+    @instance.always_callback = true
+    notification = stubbed_notification(:user_click_context => @name)
     assign_delegate.expects(:growlNotifierTimedOut_context).with(@instance, nil)
     
     @instance.onTimeout(notification)

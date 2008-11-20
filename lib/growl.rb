@@ -116,6 +116,7 @@ module Growl
       user_context = nil
       if context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
         user_context = context[:user_click_context]
+        user_context = nil if always_callback && user_context == @application_name
         if callback_object_id = context[:callback_object_id]
           @callbacks.delete(callback_object_id.to_i).call
         end
@@ -129,6 +130,7 @@ module Growl
       if context = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT]
         @callbacks.delete(context[:callback_object_id].to_i) if context[:callback_object_id]
         user_context = context[:user_click_context]
+        user_context = nil if always_callback && user_context == @application_name
       end
       
       @delegate.growlNotifierTimedOut_context(self, user_context) if @delegate && @delegate.respond_to?(:growlNotifierTimedOut_context)
